@@ -1,89 +1,168 @@
-# Skill Guardian - ClawdHub Security Scanner
+# Skill Scanner 🔒
 
-Mass security scanner for ClawdHub skills. Scans skills in batches without executing any code.
+Universal security scanner for AI agent skills (ClawdHub, etc.)
+Performs static analysis without executing any code.
 
 ## Features
 
-- 🔒 **Safe**: Only downloads SKILL.md (documentation), never executes code
-- 📦 **Batch Processing**: Scans skills in configurable batches
-- 📊 **Queue Management**: Maintains persistent queue of skills to scan
-- 🚨 **Threat Detection**: Identifies dangerous patterns in skill documentation
-- 📈 **Reports**: Generates detailed JSON and text reports
-- 🔄 **Resumable**: Can pause and resume scanning
+- ✅ **Universal**: Works with any skill package format
+- ✅ **Safe**: Static analysis only - no code execution
+- ✅ **Multi-language**: Python, JavaScript, TypeScript, Shell
+- ✅ **Comprehensive**: Detects 50+ dangerous patterns
+- ✅ **Reporting**: JSON and human-readable reports
 
-## Quick Start
+## Installation
 
 ```bash
-# Collect all skills and add to queue
-python3 batch_scanner.py --collect-only
-
-# Scan one batch
-python3 batch_scanner.py --once
-
-# Continuous scanning
-python3 batch_scanner.py
-
-# Generate report
-python3 batch_scanner.py --report
+git clone https://github.com/Shukiclaw/skill-scanner.git
+cd skill-scanner
+chmod +x skill_scanner.py
 ```
 
-## How It Works
+## Usage
 
-1. **Collection**: Searches ClawdHub for all available skills
-2. **Queue**: Maintains a persistent queue in `~/.openclaw/clawdhub-scan-db.json`
-3. **Batch Scan**: Processes skills in small batches (default: 5)
-4. **Analysis**: Scans SKILL.md for suspicious patterns
-5. **Report**: Saves results to `~/.openclaw/reports/`
+### Scan Single Skill
 
-## Detection Patterns
+```bash
+python3 skill_scanner.py /path/to/skill-name/
+```
 
-### Critical (DANGEROUS)
-- `exec()`, `eval()`, `__import__()`
-- `shell=True`
-- Email sending capabilities
+### Scan Directory of Skills
 
-### High (DANGEROUS)
+```bash
+python3 skill_scanner.py /path/to/skills/
+```
+
+### Examples
+
+```bash
+# Scan downloaded ClawdHub skills
+python3 skill_scanner.py ~/clawdhub-storage/
+
+# Scan with custom output directory
+python3 skill_scanner.py -o ./my-reports/ ~/skills/
+
+# Generate report only (quiet mode)
+python3 skill_scanner.py --report-only ~/skills/
+```
+
+## What Gets Detected
+
+### CRITICAL (Immediate Danger)
+- `exec()`, `eval()`, `__import__()` - Dynamic code execution
+- `shell=True` - Shell injection risk
+- `pty.spawn()` - Pseudo-terminal spawn
+- SMTP/email capabilities
+- Telnet access
+
+### HIGH (Suspicious)
 - `subprocess` usage
-- `os.system()` calls
+- `os.system()`, `os.popen()`
+- `child_process` (Node.js)
+- Pipe to shell (`| bash`)
 - Network tools (curl, wget, netcat)
 
-### Medium (SUSPICIOUS)
+### MEDIUM (Attention Needed)
 - HTTP requests
 - Socket usage
-- File writing
+- File write operations
+- Dynamic imports
 
-## Database Location
+### Documentation Checks
+- "ignore previous instructions"
+- "steal", "exfiltrate", "backdoor"
+- "reverse shell", "bind shell"
+
+## Output
+
+Reports are generated in the specified output directory (default: `./reports/`):
+
+- `security-report-YYYYMMDD-HHMMSS.json` - Full JSON report
+- `latest-security-report.txt` - Human-readable summary
+
+### Example Report
 
 ```
-~/.openclaw/clawdhub-scan-db.json
+======================================================================
+SKILL SECURITY SCAN REPORT
+======================================================================
+
+Generated: 2026-02-05T10:00:00
+Scanner Version: 1.0.0
+Total Scanned: 100
+Threats Found: 5
+  - DANGEROUS: 2
+  - SUSPICIOUS: 3
+
+🚨 DANGEROUS SKILLS:
+----------------------------------------------------------------------
+
+malicious-skill
+  [CRITICAL] main.py:15 - exec() - dynamic code execution
+  [HIGH] main.py:23 - subprocess execution
+  [CRITICAL] utils.py:8 - shell=True injection risk
+
+⚠️  SUSPICIOUS SKILLS:
+----------------------------------------------------------------------
+
+network-skill - 3 findings
+  [MEDIUM] fetch data from remote server
+  [MEDIUM] HTTP request to external API
 ```
 
-Contains:
-- `scanned_skills`: Results of all scanned skills
-- `queue`: Skills waiting to be scanned
-- `threats`: List of suspicious/dangerous skills
-- `stats`: Scanning statistics
+## Use with ClawdHub
 
-## Reports
+### 1. Download Skills
 
-Generated in `~/.openclaw/reports/`:
-- `report-YYYYMMDD-HHMMSS.json`: Full JSON report
-- `latest-summary.txt`: Human-readable summary
+Use `clawdhub` CLI to download skills to local storage:
+
+```bash
+# Download skills (do this separately)
+clawdhub install skill-name --dir ~/clawdhub-storage/
+```
+
+### 2. Scan Downloaded Skills
+
+```bash
+# Scan all downloaded skills
+python3 skill_scanner.py ~/clawdhub-storage/
+```
+
+### 3. Review Report
+
+```bash
+cat ./reports/latest-security-report.txt
+```
 
 ## Safety
 
-This scanner is designed to be safe:
-- ✅ Never executes skill code
-- ✅ Only downloads SKILL.md (markdown documentation)
-- ✅ Cleans up immediately after each scan
-- ✅ Uses timeouts to prevent hanging
+This scanner is completely safe:
+
+- ✅ **No Execution**: Only reads files, never runs them
+- ✅ **Static Analysis**: Pattern matching only
+- ✅ **Read-Only**: Never modifies scanned files
+- ✅ **Local**: All processing done locally
 
 ## Requirements
 
-- Python 3.8+
-- `clawdhub` CLI installed
-- Internet connection to ClawdHub
+- Python 3.7+
+- No external dependencies (stdlib only)
+
+## Supported File Types
+
+- `.py` - Python
+- `.js`, `.ts`, `.jsx`, `.tsx` - JavaScript/TypeScript
+- `.sh`, `.bash` - Shell scripts
+- `SKILL.md` - Skill documentation
 
 ## License
 
 MIT
+
+## Contributing
+
+Contributions welcome! Please open an issue or PR.
+
+## Author
+
+Created by Shuki 🤖🍺
